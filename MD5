@@ -1,0 +1,12 @@
+e19b17408679f090808858268ff94d9f *DESCRIPTION
+428fd34001efdbcb17c3f2f848ddf2fd *NAMESPACE
+a211be32623cde525cb1143ba9f52919 *NEWS
+21f98d91446ed07309b52e11adc9b561 *R/kissmig.R
+0b7a59966081e291431a772d5ee32bcc *R/kissmigAccess.R
+57848caace880d055cc58aadd01d84b1 *R/kissmigDummyS.R
+bc4ab22c412b0781320ee085b5c54c55 *R/kissmigOrigin.R
+ceda2f4f1bcfafe5e2b1eedd620c8239 *man/kissmig.Rd
+45e85177ea08208aea11175b04978858 *man/kissmigAccess.Rd
+fccf4cee93959a1cfb784b31a85c3ac1 *man/kissmigDummyS.Rd
+da73c61f6f69a931f77b793d7976183c *man/kissmigOrigin.Rd
+b43efd061532dc86dadfcbc9236d4ede *src/kissmig.c
