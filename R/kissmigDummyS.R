@@ -1,4 +1,4 @@
-#' Get suitability maps of Europe 
+#' Get suitability maps of Europe
 #'
 #' \command{kissmigDummyS} is a support function to generate suitability maps of Europe for example code.
 #' @usage
@@ -14,8 +14,9 @@
 #' used in \command{kissmig}. Set \command{download=TRUE} to download the required climate data when running the
 #' function the first time.
 #' @seealso \code{\link{kissmig}}
-#' @export kissmigDummyS  
-#' @references \url{www.worldclim.org}  
+#' @importFrom stats dnorm
+#' @export kissmigDummyS
+#' @references \url{https://www.worldclim.org/}
 
 kissmigDummyS <- function(mean, sd, download=FALSE) {
   wcl <- getData('worldclim', var='bio', res=5, download=download) # download worldclim data
