@@ -29,7 +29,7 @@ after the last iteration step}
 \command{kissmig} runs a simple, raster-based, stochastic migration model to simulate species migration and
 range shifts. It uses a geographic area of origin along with suitability maps to iteratively run a simple
 3x3 cell algorithm. Specifically, it allows for generating accessibility maps for easy integration of limited
-migration in species distribution models (\doi{10.1111/ecog.00930}{Nobis and Normand 2014}).
+migration in species distribution models (Nobis and Normand 2014, <\doi{10.1111/ecog.00930}>).
 }
 \details{
 Starting from origin "O" \command{kissmig} simulates migration for "it" iteration steps in a heterogeneous environment
@@ -45,47 +45,49 @@ beeing colonized and negative values beeing previously colonized but uncolonized
 To get reproducible results, the seed of the R random number generator can be set using the "seed" parameter.
 }
 \examples{
-\donttest{
 library(kissmig)
 
-s <- kissmigDummyS(mean=12,sd=3, download=TRUE)    # a suitability map
-o <- kissmigOrigin(s, 8, 44.5, 0.5)                # geographic origin
-l <- s>=0                                          # land mask
+# create a suitability map and geographic origin
+
+s <- kissmigDummyS(mean=12, sd=3)
+o <- kissmigOrigin(s, x=8, y=44.5, size=0.5)
+l <- s>=0 # land mask used for plotting kissmig results below
 plot(s, asp=1.0, main='suitability + origin (in black)')
 plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
 
 # run kissmig with different type of output
 
-k <- kissmig(o, s, it=150, type='DIS')
-plot(k*l, asp=1.0, main='final distribution')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
-
 k <- kissmig(o, s, it=150, type='FOC')
-plot(k*l, asp=1.0, main='first iteration step of occurrence')
+plot(k*l, asp=1.0, main='First iteration step of occurrence (type="FOC")')
 plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
-
+\donttest{
 a <- kissmigAccess(k)
-plot(a*l, asp=1.0, main='accessibility based on "FOC", absolute values')
+plot(a*l, asp=1.0, main='Accessibility based on "FOC", absolute values')
 plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
 
 a <- kissmigAccess(k, rel=TRUE)
-plot(a*l, asp=1.0, main='accessibility based on "FOC", relative values')
+plot(a*l, asp=1.0, main='Accessibility based on "FOC", relative values')
+plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
+
+k <- kissmig(o, s, it=150, type='DIS')
+plot(k*l, asp=1.0, main='Final distribution (type="DIS")')
 plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
 
 k <- kissmig(o, s, it=150, type='LOC')
-plot(k*l, asp=1.0, main='last iteration step of occurrence')
+plot(k*l, asp=1.0, main='Last iteration step of occurrence (type="LOC")')
 plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
 
 k <- kissmig(o, s, it=150, type='NOC')
-plot(k*l, asp=1.0, main='number of iteration steps with occurrences')
+plot(k*l, asp=1.0, main='Number of iteration steps with occurrences (type="NOC")')
 plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
 }
+
 }
 \references{
 \itemize{
-\item{\doi{10.1111/ecog.00930}{Nobis MP and Normand S (2014)} KISSMig - a simple model for R to account for
-limited migration in analyses of species distributions. \cite{Ecography} 37: 1282-1287.}
-\item{KISSMig homepage \url{https://purl.oclc.org/wsl/kissmig}}}
+\item{Nobis MP and Normand S (2014) KISSMig - a simple model for R to account for
+limited migration in analyses of species distributions. \cite{Ecography} 37: 1282-1287. <\doi{10.1111/ecog.00930}>}
+\item{KISSMig homepage <\url{https://purl.oclc.org/wsl/kissmig}>}}
 }
 \seealso{
 \code{\link{kissmigAccess}, \link{kissmigOrigin}}

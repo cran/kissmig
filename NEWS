@@ -1,3 +1,8 @@
+kissmig 1.0-5
+-------------
+* revision of kissmigDummyS: The climate data of the temperature suitability maps
+for the demo code is now included in the package (variable wcl_bio1_europe).
+
 kissmig 1.0-4
 -------------
 * minor revision according to CRAN check status

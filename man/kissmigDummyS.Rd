@@ -2,26 +2,23 @@
 % Please edit documentation in R/kissmigDummyS.R
 \name{kissmigDummyS}
 \alias{kissmigDummyS}
-\title{Get suitability maps of Europe}
+\title{Get a simple suitability map}
 \usage{
-kissmigDummyS(mean, sd, download=FALSE)
+kissmigDummyS(mean, sd)
 }
 \arguments{
 \item{mean}{temperature mean (degree celsius) of the suitability distribution}
 
 \item{sd}{temperature standard deviation (degree celsius) of the  suitability distribution}
-
-\item{download}{if TRUE, required climate data are downloaded from www.worldclim.org}
 }
 \description{
-\command{kissmigDummyS} is a support function to generate suitability maps of Europe for example code.
+\command{kissmigDummyS} is a support function to generate simple suitability maps based on mean annual air temperature for example code.
 }
 \details{
-\command{kissmigDummyS} returns a suitability map of Europe based on mean annual temperature. It uses
-data of worldclim and calculates suitability as a normal distribution defined by \command{mean} and \command{sd}
-of mean annual temperature. The density function is linarely rescaled to a maximum of 1, the maximum suitability
-used in \command{kissmig}. Set \command{download=TRUE} to download the required climate data when running the
-function the first time.
+\command{kissmigDummyS} returns a suitability map for a given extent based on mean annual temperature. It uses
+data of WorldClim and calculates suitability as a normal distribution defined by \command{mean} and \command{sd}
+of mean annual temperature. The density function is linearly rescaled to a maximum of 1, the maximum suitability
+used in \command{kissmig}.
 }
 \references{
 \url{https://www.worldclim.org/}
