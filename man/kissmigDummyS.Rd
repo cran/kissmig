@@ -7,18 +7,19 @@
 kissmigDummyS(mean, sd)
 }
 \arguments{
-\item{mean}{temperature mean (degree celsius) of the suitability distribution}
+\item{mean}{number of the mean temperature (degree celsius) of the suitability distribution.}
 
-\item{sd}{temperature standard deviation (degree celsius) of the  suitability distribution}
+\item{sd}{number of the temperature standard deviation (degree celsius) of the  suitability distribution.}
 }
 \description{
-\command{kissmigDummyS} is a support function to generate simple suitability maps based on mean annual air temperature for example code.
+\command{kissmigDummyS} is a support function to generate simple climate suitability maps
+for example code.
 }
 \details{
-\command{kissmigDummyS} returns a suitability map for a given extent based on mean annual temperature. It uses
-data of WorldClim and calculates suitability as a normal distribution defined by \command{mean} and \command{sd}
-of mean annual temperature. The density function is linearly rescaled to a maximum of 1, the maximum suitability
-used in \command{kissmig}.
+\command{kissmigDummyS} returns a SpatRaster of a simple climate suitability map for Europe based on mean annual temperature. It uses
+data of WorldClim and calculates suitability as a normal distribution defined by \code{mean} and \code{sd}
+of mean annual temperature. The density function is linearly rescaled to a maximum of \code{1}, the maximum suitability
+used in \code{\link{kissmig}}.
 }
 \references{
 \url{https://www.worldclim.org/}

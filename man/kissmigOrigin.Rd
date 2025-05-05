@@ -7,21 +7,21 @@
 kissmigOrigin(grd, x, y, size)
 }
 \arguments{
-\item{grd}{a single RasterLayer as reference layer}
+\item{grd}{SpatRaster with one layer as reference.}
 
-\item{x}{lower left x-coordinate of geographic origin}
+\item{x}{integer as lower left x-coordinate of geographic origin.}
 
-\item{y}{lower left y-coordinate of geographic origin}
+\item{y}{integer as lower left y-coordinate of geographic origin.}
 
-\item{size}{size of the quadratic origin}
+\item{size}{number as size of the quadratic origin.}
 }
 \description{
-\command{kissmigOrigin} is a support function to define the geographic origin for a \command{kissmig} call.
+\command{kissmigOrigin} is a support function to define a rectangular origin for a \code{\link{kissmig}} call.
 }
 \details{
-\command{kissmigOrigin} returns a rasterLayer characterized by the reference
-\command{grd}. Cell values are set to zero, except for cells of the origin defined by
-\command{extent(x, x+size, y, y+size)} which are set to one.
+\code{\link{kissmigOrigin}} returns a SpatRaster with one layer characterized by the reference
+\code{grd}. Cell values are set to \code{0}, except for cells of the origin defined by
+\code{\link[terra]{ext}(x, x+size, y, y+size)} which are set to \code{1}.
 }
 \seealso{
 \code{\link{kissmig}}

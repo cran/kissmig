@@ -1,0 +1,7 @@
+# use specific C++ version
+# from R 4.4.0 C++17 will be used for compilation and from R 3.4.0 C++14 and C++17 are supported
+# C++14 and C++17 are the thested versions
+# CXX_STD = CXX14
+
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)

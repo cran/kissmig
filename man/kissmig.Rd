@@ -2,92 +2,127 @@
 % Please edit documentation in R/kissmig.R
 \name{kissmig}
 \alias{kissmig}
-\title{Run a simple species migration model}
+\title{Run a simple dynamic species distribution model}
 \usage{
-kissmig(O, S=NULL, it, type='FOC', signed=FALSE, pext=1.0, pcor=0.2, seed=NULL)
+kissmig(
+  O,
+  S = NULL,
+  it,
+  type = "FOC",
+  signed = FALSE,
+  pext = 1,
+  pcor = 0.2,
+  seed = NULL,
+  n_threads = 1,
+  n_random = 10000
+)
 }
 \arguments{
-\item{O}{a single RasterLayer of the geographic origin}
+\item{O}{SpatRaster with a single layer of the initial species distribution as the geographic origin.}
 
-\item{S}{a Raster* object of suitability, i.e., a RasterLayer, RasterStack, or RasterBrick}
+\item{S}{SpatRaster with a single or multiple suitability layers. For the default setting \code{NULL} the suitability of all cells is set to 1.0 (maximum).}
 
-\item{it}{number of iteration steps}
+\item{it}{integer of the number of iteration steps representing the species' migration ability and applied to each suitability layer of S.}
 
-\item{type}{type of result: final distribution ('DIS'), iteration step of first occurrence
-('FOC'), iteration step of last occurrence ('LOC'), or number of iteration steps with occurrence ('NOC')}
+\item{type}{string defining the type of resulting map. Default setting is \code{"FOC"}.
+\itemize{
+\item \code{"DIS"} final species distribution after the last iteration step
+\item \code{"FOC"} number of the iteration step of the first occurrence
+\item \code{"LOC"} number of the iteration step of the last occurrence
+\item \code{"NOC"} number of the iteration steps with occurrence
+}}
 
-\item{signed}{if TRUE, the sign indicates whether the cells was colonized (positive) or uncolonized (negative)
-after the last iteration step}
+\item{signed}{bool. If \code{TRUE}, the sign indicates whether the cells was colonized (positive) or uncolonized (negative) after the last iteration step.
+Used in combination with \code{"FOC"}, \code{"LOC"}, or \code{"NOC"}. Default setting is \code{FALSE}.}
 
-\item{pext}{propability [0,1] a colonized cell becomes uncolonized between iteration steps, i.e., the species gets locally extinct}
+\item{pext}{probability [0,1] that a colonized cell becomes uncolonized between iteration steps, i.e., without recolonization the species gets locally extinct.
+Default setting is \code{1.0}.}
 
-\item{pcor}{propability [0,1] corner cells are considered in the 3x3 cell neighborhood}
+\item{pcor}{probability [0,1] that corner cells are considered in the 3x3 cell neighborhood.
+Default setting is \code{0.2}.}
 
-\item{seed}{integer used to set the seed of the random number generator}
+\item{seed}{integer used to set the seed of the random number generator.
+Default setting is \code{NULL}.}
+
+\item{n_threads}{integer of the number of threads for parallel computing.
+Default setting is \code{1} (i.e., no parallel computing).}
+
+\item{n_random}{integer defining the amount of random numbers for the simulation.
+Default setting is \code{10000}.}
 }
 \description{
-\command{kissmig} runs a simple, raster-based, stochastic migration model to simulate species migration and
-range shifts. It uses a geographic area of origin along with suitability maps to iteratively run a simple
-3x3 cell algorithm. Specifically, it allows for generating accessibility maps for easy integration of limited
-migration in species distribution models (Nobis and Normand 2014, <\doi{10.1111/ecog.00930}>).
+\command{kissmig} runs a simple, raster-based, stochastic model to simulate species
+distribution dynamics driven by environmental suitability and the migration ability of the species.
 }
 \details{
-Starting from origin "O" \command{kissmig} simulates migration for "it" iteration steps in a heterogeneous environment
-characterised by the suitability layer(s) "S". The colonized cells of the origin "O" have value 1, uncolonized
-cells value 0. In case "S" consists of several suitability layers to cover environmental change, "it" is applied to each
-layer. Suitability ranges between 0 (unsuitable) and 1 (suitability maximum). \command{kissmig} uses a 3x3 algorithm
-for species spread/migration. All cells get exstinct before an iteration step with probability "pext", and for
-a recolonization or new colonization event corner cells within the 3x3 neighborhood are considers
-with probability "pcor" ("pcor"=0.2 produces more realistic circular spread patterns - see Nobis & Normand 2014).
-For runtime optimization, signed results are generate for "signed"=TRUE, i.e, in addtion to
-the result type 'FOC, 'LCO', or 'NOC', the sign indicates the final distribution ('DIS') with positive values
-beeing colonized and negative values beeing previously colonized but uncolonized after the last iteration step.
-To get reproducible results, the seed of the R random number generator can be set using the "seed" parameter.
+Starting from an initial species distribution \code{O} as the geographic origin, \command{kissmig} simulates species distributions
+in an environment characterized by a single or multiple (time series) suitability layers \code{S}.
+The simulation uses a simple 3x3 cell algorithm, applied \code{it} iteration steps. Colonized cells
+have value \code{1}, uncolonized cells value \code{0}, and environmental suitability values vary binary or
+continuously between \code{0} (unsuitable) and \code{1} (suitability maximum). In case \code{S} consists of
+multiple suitability layers, \code{it} is applied to each layer.
+
+Between iteration steps, colonized cells become extinct with the probability \code{pext}, and for a recolonization
+or new colonization event corner cells within the 3x3 neighborhood are considered with probability \code{pcor}
+(\code{pcor}=\code{0.2} produces more realistic circular spread patterns in homogeneous environments - see Nobis and Normand 2014, \doi{10.1111/ecog.00930}).
+
+To get reproducible results, the seed of the R random number generator can be set using the \code{seed} parameter.
+In addition, for reproducibility the value of \code{n_random} needs to stay the same between simulations.
+Changing one of these parameters will generate stochastically different results - even with binary suitability due to the probability \code{pcor}
+of the corner events.
+
+Signed results with \code{signed}=\code{TRUE} can be generated to get in addition to the result type
+\code{"FOC"}, \code{"LCO"}, or \code{"NOC"} with the same call the final distribution (\code{"DIS"}) with positive values being colonized and negative values being
+previously colonized but uncolonized after the last iteration step.
+
+Runtime optimization by parallel computing can be initialized by increasing \code{n_threads}. Depending on the hardware used, it is advantageous to set
+\code{n_threads} significantly higher than the number of available CPU cores. To figure out optimal settings compare execution
+time with \code{n_threads} set to 2^x (e.g. 4, 8, 16, 32, ...). The implementation uses the OpenMP specification for parallel programming,
+\url{https://www.openmp.org/}.
 }
 \examples{
-library(kissmig)
-
-# create a suitability map and geographic origin
-
-s <- kissmigDummyS(mean=12, sd=3)
-o <- kissmigOrigin(s, x=8, y=44.5, size=0.5)
-l <- s>=0 # land mask used for plotting kissmig results below
-plot(s, asp=1.0, main='suitability + origin (in black)')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
-
-# run kissmig with different type of output
-
-k <- kissmig(o, s, it=150, type='FOC')
-plot(k*l, asp=1.0, main='First iteration step of occurrence (type="FOC")')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
 \donttest{
-a <- kissmigAccess(k)
-plot(a*l, asp=1.0, main='Accessibility based on "FOC", absolute values')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
+# generate some SpatRaster data to run kissmig
 
-a <- kissmigAccess(k, rel=TRUE)
-plot(a*l, asp=1.0, main='Accessibility based on "FOC", relative values')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
+s <- kissmigDummyS(mean = 12, sd = 3) # suitability map
+o <- kissmigOrigin(s, 8.0, 44.5, 0.5) # geographic origin
+l <- s >= 0 # land mask used for visualization below
+plot(s, asp = 1.0, main = "Climate suitability & origin (in red)")
+plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 
-k <- kissmig(o, s, it=150, type='DIS')
-plot(k*l, asp=1.0, main='Final distribution (type="DIS")')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
+# run kissmig with different types of output
 
-k <- kissmig(o, s, it=150, type='LOC')
-plot(k*l, asp=1.0, main='Last iteration step of occurrence (type="LOC")')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
+k <- kissmig(o, s, it = 150, type = "DIS")
+plot(k*l, asp = 1.0, main = "Final distribution (DIS)")
+plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 
-k <- kissmig(o, s, it=150, type='NOC')
-plot(k*l, asp=1.0, main='Number of iteration steps with occurrences (type="NOC")')
-plot(o, col=c(NA,"black"), legend=FALSE, add=TRUE) # add origin
+sb <- s>0.5 # binary suitability for an arbitrary threshold of 0.5
+k <- kissmig(o, sb, it = 150, type = "DIS")
+plot(k*l, asp = 1.0, main = "Final distribution (DIS) using binary suitability")
+plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
+
+k <- kissmig(o, s, it = 150, type = "FOC")
+plot(k*l, asp = 1.0, main = "First iteration step of occurrence (FOC)",
+     col = c("lightgrey", map.pal("viridis", n = max(values(k))+1)))
+plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
+
+a <- kissmigAccess(k, rel = TRUE)
+plot(a*l, asp = 1.0, main = "Accessibility based on 'FOC', relative values",
+     col = c("lightgrey", map.pal("viridis", n = max(values(k))+1)))
+plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
+
+k <- kissmig(o, s, it = 150, type = "NOC")
+plot(k*l, asp = 1.0, main = "Number of iteration steps with occurrences (NOC)",
+     col = c("lightgrey", map.pal("viridis", n = max(values(k))+1)))
+plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 }
-
 }
 \references{
 \itemize{
-\item{Nobis MP and Normand S (2014) KISSMig - a simple model for R to account for
-limited migration in analyses of species distributions. \cite{Ecography} 37: 1282-1287. <\doi{10.1111/ecog.00930}>}
-\item{KISSMig homepage <\url{https://purl.oclc.org/wsl/kissmig}>}}
+\item{Nobis, M.P. and Normand, S. 2014. KISSMig - a simple model for R to account for limited migration in
+analyses of species distributions. \cite{Ecography} 37: 1282-1287. \doi{10.1111/ecog.00930}}
+\item{KISSMig homepage \url{https://purl.oclc.org/wsl/kissmig}.}
+}
 }
 \seealso{
 \code{\link{kissmigAccess}, \link{kissmigOrigin}}
