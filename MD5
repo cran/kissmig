@@ -1,15 +1,15 @@
-43f42f5fb4cb027216aeaad8f0d72f53 *DESCRIPTION
+16e787c18e6552080d4e1d892ad84d95 *DESCRIPTION
 9358352fdbe3978e192eccf06ef404c6 *NAMESPACE
-3630fb49aab13446475e3ae2431c922b *NEWS
+c717fae954877b0c916dffe525ad13c6 *NEWS
 b4d3b801cac019d8db1e0e223c40dfa9 *R/RcppExports.R
-124e312c7d49b93bc8530165bc52afab *R/kissmig.R
+332b4edd729a8628fc4b4a4f030233c0 *R/kissmig.R
 7da33f27c2ce0cd15c62b26cf3cb96d0 *R/kissmigAccess.R
 f34c3788db32720575bd92d6ad68f677 *R/kissmigDummyS.R
 02243d8b205783abff230de9b500c8b8 *R/kissmigOrigin.R
 c516c8ed9e4c644c87fb14146222d16d *R/wcl_bio1_europe.R
-b24ffb1020bb09b77a75881d580147bd *R/zzz.R
+5c67bf3148311dc16ec830edc18011a6 *R/zzz.R
 078044f6e143b528bae66fdfe639372c *data/wcl_bio1_europe.rda
-f3970d25d01d421d81623846c6862a9a *man/kissmig.Rd
+5dd40033a0f3c518a56fdfdda8affdc9 *man/kissmig.Rd
 cff7402a5aeba01d4992be4bd20839a2 *man/kissmigAccess.Rd
 9bf62dedf3ae7e3d4315e5e78bc72b07 *man/kissmigDummyS.Rd
 9ecc42363aece5c119e34523d68b090a *man/kissmigOrigin.Rd
@@ -17,4 +17,4 @@ cff7402a5aeba01d4992be4bd20839a2 *man/kissmigAccess.Rd
 7e2f5b45336cc182d7310d86fd93af37 *src/Makevars
 7e2f5b45336cc182d7310d86fd93af37 *src/Makevars.win
 d23917321bd0a3ffad2f562861b4c0ca *src/RcppExports.cpp
-64f1b9af499fbb00e382c7632b8c2f13 *src/kissmig_c.cpp
+5dbaf48d37d1615c8bcad6901d0c3843 *src/kissmig_c.cpp

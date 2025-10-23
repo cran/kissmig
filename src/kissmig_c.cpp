@@ -1,4 +1,4 @@
-/* Michael Nobis & Dominik Landolt, May 2025 */
+/* Michael Nobis, 2014-2025, Dominik Landolt 2024-2025 */
 
 #include <Rcpp.h>
 #ifdef _OPENMP
@@ -12,55 +12,55 @@
 Rcpp::NumericVector kissmig_c(const Rcpp::NumericVector &d, const Rcpp::NumericVector &s, const Rcpp::IntegerVector &dim, int it, double pe, double pc, uint8_t ty, int si, int nThreads, uint32_t randRingSize)
 {
   int l;						// index of iteration
-  uint32_t i,					// generic index of cell in layer
-  t, 							// index of layer
-  p,							// index of cell in layer
-  p1,							// index of cell + 1 row
-  p2,							// index of cell - 1 row
-  flocIdx,						// index for FOC and LOC
+  uint32_t i,				// generic index of cell in layer
+  t, 								// index of layer
+  p,								// index of cell in layer
+  p1,								// index of cell + 1 row
+  p2,								// index of cell - 1 row
+  flocIdx,					// index for FOC and LOC
   nrow,							// rows per layer
   ncol,							// columns per layer
   nlay,							// amount of layers
-  n;							// amount of cells per layer
-  uint8_t b = 1;				// flag for checking corner events
-  const double* sPtr = &s[0];	// pointer to start of one suitability layer
+  n;								// amount of cells per layer
+  uint8_t b = 1;							  // flag for checking corner events
+  const double* sPtr = &s[0];		// pointer to start of one suitability layer
   nrow = dim[0];
   ncol = dim[1];
   nlay = dim[2];
   n = nrow * ncol;
-  Rcpp::NumericVector ans(n);				// resulting distribution, initializes with 0s
-  uint8_t* arrT0 = R_Calloc(n, uint8_t); 	// temp distribution on previous time step
-  uint8_t *arrT1 = R_Calloc(n, uint8_t);    // temp distribution on current time step
+  Rcpp::NumericVector ans(n);		// resulting distribution, initializes with 0s
+  uint8_t* arrT0 = R_Calloc(n, uint8_t); 	  // temp distribution on previous layer
+  uint8_t *arrT1 = R_Calloc(n, uint8_t);    // temp distribution on current layer
   uint32_t* occPos = R_Calloc(n, uint32_t); // stores positions of occurrences on current layer
 
   // R RNG
   double* randRing = R_Calloc(randRingSize, double); 	// store for random number used as ring buffer
-  uint32_t idxRandomRing; 							    // index of ring buffer "randRing"
-  // generate random number for ring buffer
+  uint32_t idxRandomRing; 			// index of ring buffer "randRing"
+
+  uint32_t nIterationLayerCombinations = (nlay * it);                                 // amount of total iterations including every layer
+  uint32_t currIterationLayerCombination = 0;                                         // tracking current iteration of total iterations
+  uint32_t* randRingStartPositions = R_Calloc(nIterationLayerCombinations, uint32_t); // random index in random number per iterations in total
+
   GetRNGstate();
+  // generate random number for ring buffer
   for (i = 0; i < randRingSize; i++)
   {
     randRing[i] = R::unif_rand();
   }
 
-
-  uint32_t nIterationAndLayer = (nlay * it); // amount of total iterations including every layer
-  uint32_t currIterationAndLayer = 0;        // tracking current iteration of total iterations
-
-  uint32_t* idxRandomNumberStart = R_Calloc(nIterationAndLayer, uint32_t); // random index in random number per iterations in total
-  // generate new jump positions as start index for the random number ring
-  for (i = 0; i < (nIterationAndLayer); i++)
+  // generate indices as start index for the random number ring
+  for (i = 0; i < (nIterationLayerCombinations); i++)
   {
-    idxRandomNumberStart[i] = floor(R::unif_rand() * (nIterationAndLayer));
+    randRingStartPositions[i] = floor(R::unif_rand() * (nIterationLayerCombinations));
   }
   PutRNGstate();
 
   uint32_t *sRange = R_Calloc(n * 2, uint32_t); 	// store for start and end positions of suitable ranges,
   // worst case amount of valid positions n * 2 (start & end for each filed, eq. checkerboard)
   size_t sRangeIdx; 								// index of "sRange", size_t
-  uint32_t kgvLastRowIdx = ncol-1; 				    // ncol -1 left or right column as shortcut for ignoring surrounding cells
-  uint32_t rangeStart;							    // index of the start index of a range in "sRange"
-  bool isCounting;								    // flag beeing in suitable range or not
+  uint32_t kgvLastRowIdx = ncol-1; 	// ncol -1 left or right column as shortcut for ignoring surrounding cells
+  uint32_t rangeStart;							// index of the start index of a range in "sRange"
+  bool isCounting;							  	// flag beeing in suitable range or not
 
   // read origin d into xarrlT1
   // INFO: not required for xarrT0, xarrT0 will be initialized when copying xarrT1 to it
@@ -107,6 +107,27 @@ Rcpp::NumericVector kissmig_c(const Rcpp::NumericVector &d, const Rcpp::NumericV
       // t0 <- t1
       memcpy(arrT0, arrT1, n * sizeof(uint8_t));
 
+      const uint64_t randRingOffset = randRingStartPositions[currIterationLayerCombination];
+
+      // extinctions
+      #ifdef _OPENMP
+      #pragma omp parallel for schedule(static) num_threads(nThreads) private(idxRandomRing)
+      #endif
+          for (i = 0; i < n; i++) {
+        // get relevant random number
+        idxRandomRing = (
+          (
+            randRingOffset +  // random offset per virtual layer
+            i *               // relative cell position
+            11                // skip used random numbers
+          ) % randRingSize    // wrap random number buffer index
+        );
+
+        if (arrT0[i]) {
+            if (randRing[idxRandomRing] <= pe) { arrT1[i] = 0; }
+          }
+      }
+
       // find and set occurrences within 3x3 neighborhood
       // parallel loop with thread private variables
       #ifdef _OPENMP
@@ -121,24 +142,28 @@ Rcpp::NumericVector kissmig_c(const Rcpp::NumericVector &d, const Rcpp::NumericV
           p1 = p+ncol;
           p2 = p-ncol;
 
-          // get index of from buffer with random numbers,
-          // wrap at the end of the buffer to use it as "ring buffer",
-          // and prevent exceeding the number range of uint32_t by temporaily casting to uint64_t
+          // get start index of the next 11 random numbers to use as possible colonization and extinction for this cell
+          // index is calculated as follows:
+          //    (
+          // 1.   pseudo random offset per virtual layer, so that random numbers will be different per cell of every layer
+          //      (virtual layer = unique iteration over all layers (layer * iteration))
+          //    ) + (
+          // 2.   relative cell position in current layer for uniqueness within the layer
+          //    *
+          // 3.   offset 11 to skip already used random numbers, to uncorelate results from one cell to the next
+          //      (11 due to possible 1 extinction, 9 colonizations and 1 check for edge cells)
+          //    )
+          //    %
+          // 4.   wrap resulting index by the amount of random numbers in the random number buffer to prevent index out of range errors and reuse old random numbers
+          // prevent integer overflow (e.g. INT_MAX + 1 = INT_MIN) of uint32_t by casting to uint64_t
           // further use of "idxRandomRing" requires the same modulo operations
-          // index of random number must be unique through all layers, iterations, and positions in one layer
-          // idxRandomRing = ((uint64_t)((p + (n * (t * it + l))) % randRingSize) * 11) % randRingSize;
-          // idxRandomRing = ((((uint64_t)p + (n * (t * it + l)) + idxRandomNumberStart[currIterationAndLayer]) % randRingSize) * 11) % randRingSize;
           idxRandomRing = (
             (
-              (uint64_t)idxRandomNumberStart[currIterationAndLayer] + // offset per iteration and layer
-              ((uint64_t)p * 11) // 11 new random numbers per position (due to checks below, e.g. extinction, colonizaiton, corner events)
-            ) % randRingSize // prevent index out of range
+              randRingOffset +  // random offset per virtual layer
+              p *               // relative cell position
+              11                // skip used random numbers
+            ) % randRingSize    // wrap random number buffer index
           );
-
-          // extinction?
-          if (arrT0[p]) {
-            if (randRing[idxRandomRing] <= pe) { arrT1[p] = 0; }
-          }
 
           // potential colonization only if focal cell uncolonized
           if (!arrT1[p]) {
@@ -188,7 +213,7 @@ Rcpp::NumericVector kissmig_c(const Rcpp::NumericVector &d, const Rcpp::NumericV
         for (i = 0; i < n; i++) { if (arrT1[i]) { ans[i]++; } }
       }
 
-      currIterationAndLayer++;
+      currIterationLayerCombination++;
     }
 
     // set the first element of the new suitability layer as position 0, therefore sPtr[i] returns s[x*n+i] where n = layer size, x = current layer as index, i = the element of current layer

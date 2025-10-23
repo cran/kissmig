@@ -1,26 +1,31 @@
-kissmig 2.0.0 (Breaking Changes)
+kissmig 2.0-1
 -------------
-* parallel processing for 'kissmig::kissmig()' through optional argument 'n_threads'
-* migration from raster to terra
+* BUG-FIX: overpredictions with binary suitability since v2.0-0
+* 'n_random' default increased to 100,000 to reduce regular patterns
+
+kissmig 2.0-0
+-------------
+* BREAKING CHANGES: migration from raster to terra
+* NEW: parallel processing for 'kissmig::kissmig()' through optional argument 'n_threads'
 * general performance improvements
 
-kissmig 1.0.4
+kissmig 1.0-4
 -------------
 * minor revision according to CRAN check status
 
-kissmig 1.0.3
+kissmig 1.0-3
 -------------
 * minor changes of documentation
 * first version available on CRAN
 
-kissmig 1.0.2
+kissmig 1.0-2
 -------------
 * minor changes of documentation
 
-kissmig 1.0.1
+kissmig 1.0-1
 -------------
 * first version published on the kissmig homepage
 
-kissmig 1.0.0
+kissmig 1.0-0
 -------------
 * initial private release available for expert opinion on Nobis & Normand (2014)

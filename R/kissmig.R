@@ -21,7 +21,7 @@
 #' @param n_threads integer of the number of threads for parallel computing.
 #' Default setting is `1` (i.e., no parallel computing).
 #' @param n_random integer defining the amount of random numbers for the simulation.
-#' Default setting is `10000`.
+#' Default setting is `100000`.
 #'
 #' @details
 #' Starting from an initial species distribution \code{O} as the geographic origin, \command{kissmig} simulates species distributions
@@ -34,6 +34,7 @@
 #' Between iteration steps, colonized cells become extinct with the probability \code{pext}, and for a recolonization
 #' or new colonization event corner cells within the 3x3 neighborhood are considered with probability \code{pcor}
 #' (\code{pcor}=`0.2` produces more realistic circular spread patterns in homogeneous environments - see Nobis and Normand 2014, \doi{10.1111/ecog.00930}).
+#' If required, the random numbers are reused as a ring, and small values of \code{n_random} may produce regular structures in spread pattern.
 #'
 #' To get reproducible results, the seed of the R random number generator can be set using the \code{seed} parameter.
 #' In addition, for reproducibility the value of \code{n_random} needs to stay the same between simulations.
@@ -59,36 +60,36 @@
 #' \donttest{
 #' # generate some SpatRaster data to run kissmig
 #'
-#' s <- kissmigDummyS(mean = 12, sd = 3) # suitability map
+#' s <- kissmigDummyS(mean = 12, sd = 3) # a simple climate suitability map
 #' o <- kissmigOrigin(s, 8.0, 44.5, 0.5) # geographic origin
-#' l <- s >= 0 # land mask used for visualization below
+#' l <- s >= 0 # land mask used for visualization
 #' plot(s, asp = 1.0, main = "Climate suitability & origin (in red)")
 #' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 #'
 #' # run kissmig with different types of output
 #'
-#' k <- kissmig(o, s, it = 150, type = "DIS")
-#' plot(k*l, asp = 1.0, main = "Final distribution (DIS)")
-#' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
-#'
 #' sb <- s>0.5 # binary suitability for an arbitrary threshold of 0.5
-#' k <- kissmig(o, sb, it = 150, type = "DIS")
-#' plot(k*l, asp = 1.0, main = "Final distribution (DIS) using binary suitability")
+#' k1 <- kissmig(o, sb, it = 150, type = "DIS")
+#' plot(k1*l, asp = 1.0, main = "Final distribution (DIS) using binary suitability")
 #' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 #'
-#' k <- kissmig(o, s, it = 150, type = "FOC")
-#' plot(k*l, asp = 1.0, main = "First iteration step of occurrence (FOC)",
-#'      col = c("lightgrey", map.pal("viridis", n = max(values(k))+1)))
+#' k2 <- kissmig(o, s, it = 150, type = "DIS")
+#' plot(k2*l, asp = 1.0, main = "Final distribution (DIS) using quantitative suitability")
 #' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 #'
-#' a <- kissmigAccess(k, rel = TRUE)
+#' k3 <- kissmig(o, s, it = 150, type = "FOC")
+#' plot(k3*l, asp = 1.0, main = "First iteration step of occurrence (FOC)",
+#'      col = c("lightgrey", map.pal("viridis", n = max(values(k3))+1)))
+#' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
+#'
+#' a <- kissmigAccess(k3, rel = TRUE)
 #' plot(a*l, asp = 1.0, main = "Accessibility based on 'FOC', relative values",
-#'      col = c("lightgrey", map.pal("viridis", n = max(values(k))+1)))
+#'      col = c("lightgrey", map.pal("viridis", n = max(values(k3))+1)))
 #' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 #'
-#' k <- kissmig(o, s, it = 150, type = "NOC")
-#' plot(k*l, asp = 1.0, main = "Number of iteration steps with occurrences (NOC)",
-#'      col = c("lightgrey", map.pal("viridis", n = max(values(k))+1)))
+#' k4 <- kissmig(o, s, it = 150, type = "NOC")
+#' plot(k4*l, asp = 1.0, main = "Number of iteration steps with occurrences (NOC)",
+#'      col = c("lightgrey", map.pal("viridis", n = max(values(k4))+1)))
 #' plot(o, col = c(rgb(0,0,0,0), "red"), legend = FALSE, add = TRUE) # add origin
 #' }
 #' @importFrom Rcpp evalCpp
@@ -97,7 +98,7 @@
 #' @useDynLib kissmig, .registration = TRUE
 #' @export kissmig
 
-kissmig <- function(O, S = NULL, it, type = "FOC", signed = FALSE, pext = 1.0, pcor = 0.2, seed = NULL, n_threads = 1, n_random = 10000) {
+kissmig <- function(O, S = NULL, it, type = "FOC", signed = FALSE, pext = 1.0, pcor = 0.2, seed = NULL, n_threads = 1, n_random = 100000) {
   # check class of origin 'O' and read data
   if (!is(O, "SpatRaster")) stop("origin 'O' must be a SpatRaster of the terra package")
   if (dim(O)[3]!=1) stop("origin 'O' must be a SpatRaster with a single layer")
@@ -107,7 +108,7 @@ kissmig <- function(O, S = NULL, it, type = "FOC", signed = FALSE, pext = 1.0, p
   # check 'type'
   type <- toupper(type)
   ifelse(type %in% c("DIS", "FOC", "LOC", "NOC"),
-    ty <- which(c("DIS", "FOC", "LOC", "NOC") == toupper(type)),
+    ty <- which(c("DIS", "FOC", "LOC", "NOC") == type),
     stop("'type' must be 'DIS', 'FOC', 'LOC', or 'NOC'", call. = FALSE)
   )
 
@@ -161,8 +162,8 @@ kissmig <- function(O, S = NULL, it, type = "FOC", signed = FALSE, pext = 1.0, p
   }
 
   # check for too large or small random numbers
-  if (n_random < 10000) {
-    warning(paste("amount of random numbers are smaller than the recommendation of 10000, found n_random =", n_random), call. = FALSE)
+  if (n_random < 100000) {
+    warning(paste("amount of random numbers are smaller than the recommendation of 100000, found n_random =", n_random), call. = FALSE)
   } else if (n_random > uint32Max) {
     stop(paste("amount of random numbers have to be < (2^32)-1, found n_random =", n_random))
   }
